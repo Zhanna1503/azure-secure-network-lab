@@ -36,27 +36,52 @@ flowchart LR
 | Azure Firewall | Standard tier, policy `fw-policy`, private IP 10.1.63.4 |
 | Firewall rules | Application rule: HTTPS to `dev.azure.com` and `azure.microsoft.com` from 10.1.0.0/23. Network rule: DNS (UDP 53) to 1.1.1.1 / 1.0.0.1 |
 | Route table | `app-vnet-firewall-rt` on `frontend` and `backend`: 0.0.0.0/0 → 10.1.63.4 (virtual appliance) |
-| DNS | Custom DNS servers 1.1.1.1 / 1.0.0.1 on `app-vnet`, private DNS zone `private.contoso.com` |
+| DNS | Custom DNS servers 1.1.1.1 / 1.0.0.1 on `app-vnet`, private DNS zone `private.contoso.com` (created, not linked to a VNet yet) |
 | VMs | VM1 (frontend) and VM2 (backend), Ubuntu, Standard_D2s_v4 |
 
 ## How I tested it
 
 | Test | How | Result |
 |---|---|---|
-| Outbound traffic goes through the firewall | Network Watcher → Next hop from VM1 | <!-- e.g. VirtualAppliance 10.1.63.4 --> |
-| Allowed site is reachable | VM1 → Run command: `curl -I https://dev.azure.com` | <!-- result --> |
-| Other sites are blocked | VM1 → Run command: `curl -I https://www.google.com` | <!-- result --> |
-| DNS works through the firewall | VM1 → Run command: `nslookup dev.azure.com` | <!-- result --> |
+| Outbound traffic goes through the firewall | Network Watcher → Next hop from VM1 (10.1.0.4) to 8.8.8.8 | Next hop: VirtualAppliance 10.1.63.4 ✅ |
+| Allowed site is reachable | VM1 → Run command: `curl https://dev.azure.com` | HTTP 302 – allowed ✅ |
+| Other sites are blocked | VM1 → Run command: `curl https://www.google.com` | HTTP 000 – blocked by the firewall ✅ |
+| DNS works through the firewall | VM1 → Run command: `getent hosts dev.azure.com` | Name resolved ✅ |
 
-Screenshots of each step are in [`docs/screenshots`](docs/screenshots).
+### Screenshots
+
+**VNet peering**
+![VNet peering](docs/screenshots/01-peering.png)
+
+**NSG inbound rules**
+![NSG rules](docs/screenshots/02-nsg-rules.png)
+
+**Firewall policy – application rules**
+![Application rules](docs/screenshots/03-firewall-app-rules.png)
+
+**Firewall policy – network rules**
+![Network rules](docs/screenshots/04-firewall-network-rules.png)
+
+**Route table – routes and subnets**
+![Routes](docs/screenshots/05-route-table.png)
+![Route table subnets](docs/screenshots/06-route-table-subnets.png)
+
+**Private DNS zone**
+![Private DNS](docs/screenshots/07-private-dns.png)
+
+**Test: next hop**
+![Next hop](docs/screenshots/08-next-hop.png)
+
+**Test: firewall rules and DNS**
+![Tests](docs/screenshots/09-tests.png)
 
 ## Lessons learned
 
 - **Firewall placement.** In this lab the firewall sits in the app VNet, and the hub stays empty. In a real hub-and-spoke design, the firewall lives in the hub and every spoke routes to it through the peering.
-- **Custom DNS vs. private DNS zones.** `app-vnet` uses 1.1.1.1 as its DNS server. VMs then can't resolve Azure private DNS zones, because only Azure's own resolver (168.63.129.16) answers for them. To use both, keep Azure DNS or add a DNS Private Resolver / forwarder.
+- **Custom DNS vs. private DNS zones.** `app-vnet` uses 1.1.1.1 as its DNS server. VMs then can't resolve Azure private DNS zones, because only Azure's own resolver (168.63.129.16) answers for them. To use both, keep Azure DNS or add a DNS Private Resolver / forwarder. The zone also has no virtual network link yet, and a private zone only answers for VNets it's linked to.
 - **SSH from anywhere.** The NSG allows port 22 from any source. That's acceptable for a short lab. In production, restrict the source, use Azure Bastion and remove public IPs from VMs.
+- **Testing without SSH.** Run command let me test the firewall rules from inside the VM without opening any inbound port.
 - **Lab image.** Ubuntu 18.04 is out of standard support. Use 22.04 or 24.04 for anything real.
-- <!-- Add your own: what confused you, what broke, what you'd do differently -->
 
 ## Cost and cleanup
 
