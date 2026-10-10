@@ -23,6 +23,9 @@ flowchart LR
     DNS[("Private DNS zone<br/>private.contoso.com")]
 ```
 
+<img width="945" height="474" alt="image" src="https://github.com/user-attachments/assets/44834806-d139-49e9-a5c7-f491b3662ba8" />
+
+
 ![Topology from Azure Network Watcher](docs/topology.png)
 
 ## What I built
