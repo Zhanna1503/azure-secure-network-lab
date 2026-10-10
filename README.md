@@ -3,6 +3,8 @@
 Secure network setup built hands-on in the Azure portal: two peered VNets, subnet segmentation, an NSG with an application security group, Azure Firewall with a firewall policy, forced outbound routing through the firewall, and a private DNS zone.
 
 > Based on the Microsoft Learn guided project [Configure secure access to workloads with Azure virtual networking services](https://learn.microsoft.com/en-us/training/modules/guided-project-configure-secure-access-workloads/). I built everything in the portal and exported the templates afterwards.
+><img width="945" height="474" alt="image" src="https://github.com/user-attachments/assets/ce6b0a05-0c67-4ce4-bc66-dffd1e274c42" />
+
 
 ## Architecture
 
@@ -22,8 +24,6 @@ flowchart LR
     FW -->|"HTTPS: dev.azure.com, azure.microsoft.com<br/>UDP 53: 1.1.1.1, 1.0.0.1"| NET((Internet))
     DNS[("Private DNS zone<br/>private.contoso.com")]
 ```
-
-<img width="945" height="474" alt="image" src="https://github.com/user-attachments/assets/44834806-d139-49e9-a5c7-f491b3662ba8" />
 
 
 ![Topology from Azure Network Watcher](docs/topology.png)
